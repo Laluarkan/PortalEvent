@@ -4,7 +4,9 @@ from django.utils.text import slugify
 import uuid
 import qrcode 
 from io import BytesIO 
-from django.core.files import File 
+
+# --- PERBAIKAN IMPORT: Gunakan ContentFile agar upload Cloudinary lancar ---
+from django.core.files.base import ContentFile 
 from django.conf import settings
 from cloudinary.models import CloudinaryField
 
@@ -15,14 +17,12 @@ class User(AbstractUser):
 
 # 2. Model Event (Seminar/Lomba)
 class Event(models.Model):
-    # Opsi Kategori
     CATEGORY_CHOICES = (
         ('seminar', 'Seminar'),
         ('lomba', 'Lomba'),
         ('workshop', 'Workshop'),
     )
     
-    # Opsi Status
     STATUS_CHOICES = (
         ('pending', 'Menunggu Validasi Admin'),
         ('active', 'Aktif / Tayang'),
@@ -36,21 +36,18 @@ class Event(models.Model):
     description = models.TextField()
     poster = CloudinaryField('image', folder='posters', blank=True, null=True)
     
-    # Field Category (Wajib ada agar forms.py tidak error)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='seminar')
     
     date_time = models.DateTimeField()
     location = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=0, default=0)
     
-    # Field Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            # Generate slug unik
             self.slug = slugify(self.title) + "-" + str(uuid.uuid4())[:4]
         super().save(*args, **kwargs)
 
@@ -63,9 +60,7 @@ class Event(models.Model):
     
     @property
     def current_revenue(self):
-        # 1. Hitung jumlah peserta yang SUDAH VERIFIKASI (Lunas) di event ini
         verified_count = self.participants.filter(is_verified=True).count()
-        # 2. Kalikan dengan harga tiket
         return verified_count * self.price
 
 # 3. Model Peserta
@@ -80,23 +75,22 @@ class Participant(models.Model):
     is_verified = models.BooleanField(default=False)
     registered_at = models.DateTimeField(auto_now_add=True)
 
-    # --- TAMBAHAN BARU ---
-    # ID Unik untuk QR Code (Bukan ID angka biasa agar aman)
     validation_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    # Tempat simpan gambar QR
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Cek apakah QR Code sudah ada, jika belum buat baru
         if not self.qr_code:
-            # --- BAGIAN YANG DIUBAH ---
-            # Ganti dengan IP Laptop Anda + Port 8000
-            # Contoh: "192.168.1.10:8000" (Sesuaikan dengan angka di ipconfig Anda)
-            domain_ip = "10.164.165.241:8000" 
+            # --- BAGIAN PENTING: SETTING DOMAIN ---
+            # Ganti ini dengan domain Render Anda agar QR Code valid saat discan
+            # Jangan pakai IP Laptop (192.168...) untuk production!
+            domain = "portalevent.onrender.com" 
+            protocol = "https"
             
-            # Gunakan http://
-            validation_url = f"http://{domain_ip}/scan/{self.validation_id}/"
-            # --------------------------
+            # Buat URL Validasi (contoh: https://portalevent.onrender.com/scan/uuid/)
+            validation_url = f"{protocol}://{domain}/scan/{self.validation_id}/"
             
+            # Generate QR Code
             qr = qrcode.QRCode(
                 version=1,
                 error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -107,11 +101,16 @@ class Participant(models.Model):
             qr.make(fit=True)
             img = qr.make_image(fill_color="black", back_color="white")
 
+            # --- BAGIAN FIX CLOUDINARY ---
+            # Simpan gambar ke RAM (Memory) dulu
             buffer = BytesIO()
             img.save(buffer, format="PNG")
             
-            file_name = f'qr-{self.full_name}-{self.validation_id}.png'
-            self.qr_code.save(file_name, File(buffer), save=False)
+            # Buat nama file unik
+            file_name = f'qr-{self.validation_id}.png'
+            
+            # Simpan menggunakan ContentFile (Wajib untuk Cloudinary/S3)
+            self.qr_code.save(file_name, ContentFile(buffer.getvalue()), save=False)
 
         super().save(*args, **kwargs)
 
@@ -119,18 +118,9 @@ class Participant(models.Model):
         return f"{self.full_name} - {self.event.title}"
     
     def get_certificate_id(self):
-        # Format: TAHUN-BULAN-TGL-NAMA-NOMORURUT
-        # Contoh: 2025-12-05-AWGDJASH-042
-        
-        # Ambil tanggal daftar
         tgl = self.registered_at.strftime("%Y-%m-%d")
-        
-        # Bersihkan nama (hilangkan spasi jadi dash) dan uppercase
         nama_safe = slugify(self.full_name).upper() 
-        
-        # Ambil ID database dan pad dengan nol (misal 1 jadi 001)
         nomor_urut = str(self.id).zfill(3) 
-        
         return f"{tgl}-{nama_safe}-{nomor_urut}"
         
 class Blacklist(models.Model):
