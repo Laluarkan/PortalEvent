@@ -315,7 +315,7 @@ def generate_certificate(request, validation_id):
     width, height = landscape(A4)
 
     bg_filename = 'sertifikat_bg.png' 
-    bg_path = os.path.join(settings.BASE_DIR, 'events',  'static', 'events', 'images', bg_filename)
+    bg_path = os.path.join(settings.BASE_DIR, 'events',  'static', 'images', bg_filename)
 
     if os.path.exists(bg_path):
         c.drawImage(bg_path, 0, 0, width=width, height=height)
