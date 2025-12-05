@@ -1,0 +1,23 @@
+{% extends 'events/base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <h4 class="mb-0">Kirim Email Massal: {{ event.title }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    Pesan ini akan dikirim ke <strong>{{ event.participants.count }}</strong> peserta yang terdaftar.
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">🚀 Kirim Sekarang</button>
+                    <a href="{% url 'organizer_dashboard' %}" class="btn btn-secondary">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

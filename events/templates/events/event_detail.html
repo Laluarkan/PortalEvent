@@ -1,0 +1,71 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card shadow-sm mb-4">
+            
+            {% if event.poster %}
+                <img src="{{ event.poster.url }}" 
+                     alt="{{ event.title }}" 
+                     class="card-img-top"
+                     style="width: 100%; height: auto; display: block;">
+            {% endif %}
+            <div class="card-body">
+                <h2>{{ event.title }}</h2>
+                
+                <div class="mb-3">
+                    {% if event.status == 'active' %}
+                        <span class="badge bg-success">Tayang</span>
+                    {% elif event.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Menunggu Validasi</span>
+                    {% endif %}
+                </div>
+
+                <p class="text-muted">
+                    📅 {{ event.date_time|date:"d M Y, H:i" }} <br>
+                    📍 {{ event.location }}
+                </p>
+                <hr>
+                <div class="event-description">
+                    {{ event.description|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card shadow-lg border-primary sticky-top" style="top: 100px; z-index: 1;">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Form Pendaftaran</h4>
+            </div>
+            <div class="card-body">
+                {% if event.price == 0 %}
+                    <div class="alert alert-success">✨ Event ini GRATIS!</div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        Biaya: <strong>Rp {{ event.price }}</strong><br>
+                        Transfer ke: BCA 1234567890 (Admin)
+                    </div>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-success w-100 btn-lg mt-3">Daftar Sekarang</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

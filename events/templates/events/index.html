@@ -1,0 +1,126 @@
+{% extends 'events/base.html' %}
+{% load static %} {% block content_wrapper %}
+<style>
+    .hero-section {
+        width: 100%;
+        padding: 8rem 0;
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.5)), url('{% static "events/images/hero-bg.png" %}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+</style>
+
+<div class="hero-section text-white text-center position-relative overflow-hidden">
+     
+    <div class="container position-relative" style="z-index: 2;">
+        <h1 class="display-4 fw-bold mb-3">Kelola & Ikuti Seminar <br>Jadi Lebih Mudah</h1>
+        <p class="fs-5 mb-4 mx-auto" style="max-width: 700px;">
+            Platform satu pintu untuk Organizer mempublikasikan event dan Peserta menemukan kegiatan bermanfaat. 
+            Mulai dari Seminar, Workshop, hingga Lomba tingkat nasional.
+        </p>
+        
+        <div class="d-flex gap-3 justify-content-center">
+            {% if not user.is_authenticated %}
+                <button type="button" class="btn btn-primary btn-lg fw-bold px-4 shadow" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    Mulai Sekarang
+                </button>
+                <a href="#fitur" class="btn btn-outline-light btn-lg px-4">Pelajari Lebih Lanjut</a>
+            {% else %}
+                <a href="{% url 'organizer_dashboard' %}" class="btn btn-primary btn-lg fw-bold px-4 shadow">
+                    Ke Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container my-5" id="fitur">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm p-4 bg-white">
+                <div class="card-body text-center">
+                    <div class="mb-3 display-4">📢</div>
+                    <h3 class="fw-bold text-primary">Untuk Organizer</h3>
+                    <p class="text-muted">Publikasikan kegiatan Anda dan jangkau lebih banyak peserta dengan mudah.</p>
+                    <ul class="text-start list-unstyled mt-4">
+                        <li class="mb-2">✅ Buat halaman event yang profesional</li>
+                        <li class="mb-2">✅ Link pendaftaran otomatis & shareable</li>
+                        <li class="mb-2">✅ Dashboard pemantauan peserta realtime</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm p-4 bg-white">
+                <div class="card-body text-center">
+                    <div class="mb-3 display-4">🎓</div>
+                    <h3 class="fw-bold text-success">Untuk Peserta</h3>
+                    <p class="text-muted">Temukan wadah untuk meningkatkan skill dan prestasi akademik Anda.</p>
+                    <ul class="text-start list-unstyled mt-4">
+                        <li class="mb-2">✅ Akses info seminar & lomba terbaru</li>
+                        <li class="mb-2">✅ Pendaftaran praktis tanpa ribet</li>
+                        <li class="mb-2">✅ Riwayat pendaftaran tersimpan rapi</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="py-5 bg-white rounded-3 mb-5 px-4 shadow-sm border">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Bagaimana Cara Kerjanya?</h2>
+            <p class="text-muted">Langkah mudah untuk memulai perjalanan event Anda</p>
+        </div>
+
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="p-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4 mb-3">1</span>
+                    <h5>Daftar Akun</h5>
+                    <p class="text-muted small">Cukup gunakan akun Google Anda untuk login secara instan.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="p-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4 mb-3">2</span>
+                    <h5>Buat / Cari Event</h5>
+                    <p class="text-muted small">Organizer mendaftarkan acara, Peserta mencari topik yang diminati.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="p-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4 mb-3">3</span>
+                    <h5>Pelaksanaan</h5>
+                    <p class="text-muted small">Peserta terdaftar, Organizer memantau, dan acara siap dilaksanakan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center py-5">
+        <h3 class="fw-bold mb-3">Siap Mengembangkan Event Anda?</h3>
+        {% if not user.is_authenticated %}
+            <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 shadow" data-bs-toggle="modal" data-bs-target="#loginModal">
+                Gabung Sekarang (Gratis)
+            </button>
+        {% else %}
+             <a href="{% url 'create_event' %}" class="btn btn-success btn-lg rounded-pill px-5 shadow">
+                Buat Event Sekarang
+            </a>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

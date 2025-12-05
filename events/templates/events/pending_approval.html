@@ -1,0 +1,25 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <div class="card shadow-lg border-0 rounded-3 p-5">
+            <div class="mb-4">
+                <img src="https://img.icons8.com/clouds/100/000000/clock.png" alt="Pending">
+            </div>
+            <h2 class="fw-bold text-warning">Menunggu Aktivasi</h2>
+            <p class="lead text-muted mt-3">
+                Halo, <strong>{{ user.username }}</strong>! <br>
+                Akun Anda berhasil dibuat, tetapi belum diaktifkan sebagai <strong>Organizer</strong>.
+            </p>
+            <p class="text-muted">
+                Silahkan hubungi Admin untuk memverifikasi akun Anda agar bisa mulai menambahkan event.
+            </p>
+            
+            <hr class="my-4">
+            
+            <a href="{% url 'home' %}" class="btn btn-primary">Kembali ke Beranda</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

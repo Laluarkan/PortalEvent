@@ -1,0 +1,43 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 text-center p-4">
+            
+            {% if participant.is_verified %}
+                <div class="mb-3">
+                    <img src="https://img.icons8.com/emoji/96/000000/check-mark-button-emoji.png" alt="Valid">
+                </div>
+                <h1 class="text-success fw-bold display-4">VALID</h1>
+                <p class="lead">Peserta Terverifikasi</p>
+                <div class="alert alert-success mt-3">
+                    Silahkan izinkan peserta masuk.
+                </div>
+            {% else %}
+                <div class="mb-3">
+                    <img src="https://img.icons8.com/emoji/96/000000/cross-mark-emoji.png" alt="Invalid">
+                </div>
+                <h1 class="text-danger fw-bold display-4">PENDING</h1>
+                <p class="lead">Pembayaran Belum Diverifikasi</p>
+                <div class="alert alert-warning mt-3">
+                    Mohon cek bukti pembayaran peserta ini di dashboard.
+                </div>
+            {% endif %}
+
+            <hr>
+
+            <div class="text-start bg-light p-3 rounded">
+                <p class="mb-1"><strong>Nama:</strong> {{ participant.full_name }}</p>
+                <p class="mb-1"><strong>Event:</strong> {{ event.title }}</p>
+                <p class="mb-1"><strong>Instansi:</strong> {{ participant.institution }}</p>
+                <p class="mb-0"><strong>Email:</strong> {{ participant.email }}</p>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'organizer_dashboard' %}" class="btn btn-primary w-100">Kembali ke Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

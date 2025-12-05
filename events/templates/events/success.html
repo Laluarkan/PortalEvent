@@ -1,0 +1,38 @@
+{% extends 'events/base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow-lg border-0 rounded-3 p-4">
+            <div class="mb-3">
+                <img src="https://img.icons8.com/clouds/100/000000/checkmark.png" alt="Success">
+            </div>
+            
+            <h2 class="text-success fw-bold">Pendaftaran Berhasil!</h2>
+            <p class="text-muted">Terima kasih <strong>{{ participant.full_name }}</strong>, Anda telah terdaftar di event:</p>
+            <h4 class="fw-bold text-primary">{{ event.title }}</h4>
+            
+            <hr class="my-4">
+            
+            <h5 class="fw-bold mb-3">🎫 Tiket / QR Code Anda</h5>
+            <div class="bg-light p-3 d-inline-block rounded border">
+                {% if participant.qr_code %}
+                    <img src="{{ participant.qr_code.url }}" alt="QR Code" width="200" height="200">
+                    <br>
+                    <a href="{{ participant.qr_code.url }}" download="Tiket-Seminar.png" class="btn btn-sm btn-success mt-2">
+                        ⬇ Simpan Gambar
+                    </a>
+                {% else %}
+                    <p>QR Code sedang digenerate...</p>
+                {% endif %}
+            </div>
+            <p class="small text-muted mt-2">
+                Simpan QR Code ini (Screenshot) dan tunjukkan kepada panitia saat acara berlangsung.
+            </p>
+
+            <div class="d-grid gap-2 mt-4">
+                <a href="{% url 'event_detail' event.slug %}" class="btn btn-outline-primary">Kembali ke Halaman Event</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
