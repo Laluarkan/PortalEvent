@@ -5,10 +5,10 @@ import uuid
 import qrcode 
 from io import BytesIO 
 
-# --- PERBAIKAN IMPORT: Gunakan ContentFile agar upload Cloudinary lancar ---
 from django.core.files.base import ContentFile 
 from django.conf import settings
-from cloudinary.models import CloudinaryField
+from cloudinary.models import CloudinaryField 
+import cloudinary.uploader
 
 # 1. Custom User (Admin & Organizer)
 class User(AbstractUser):
@@ -34,16 +34,15 @@ class Event(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
+    
+    # SUDAH BENAR
     poster = CloudinaryField('image', folder='posters', blank=True, null=True)
     
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='seminar')
-    
     date_time = models.DateTimeField()
     location = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=0, default=0)
-    
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -71,46 +70,46 @@ class Participant(models.Model):
     phone = models.CharField(max_length=20)
     institution = models.CharField(max_length=100, blank=True)
     
-    payment_proof = models.ImageField(upload_to='payments/', blank=True, null=True)
+    # Field Cloudinary
+    payment_proof = CloudinaryField('image', folder='payments', blank=True, null=True)
+    qr_code = CloudinaryField('image', folder='qrcodes', blank=True, null=True)
+
     is_verified = models.BooleanField(default=False)
     registered_at = models.DateTimeField(auto_now_add=True)
-
     validation_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # Cek apakah QR Code sudah ada, jika belum buat baru
         if not self.qr_code:
-            # --- BAGIAN PENTING: SETTING DOMAIN ---
-            # Ganti ini dengan domain Render Anda agar QR Code valid saat discan
-            # Jangan pakai IP Laptop (192.168...) untuk production!
             domain = "portalevent.onrender.com" 
             protocol = "https"
-            
-            # Buat URL Validasi (contoh: https://portalevent.onrender.com/scan/uuid/)
             validation_url = f"{protocol}://{domain}/scan/{self.validation_id}/"
             
-            # Generate QR Code
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
-            )
+            # Generate QR
+            qr = qrcode.QRCode(box_size=10, border=4)
             qr.add_data(validation_url)
             qr.make(fit=True)
             img = qr.make_image(fill_color="black", back_color="white")
 
-            # --- BAGIAN FIX CLOUDINARY ---
-            # Simpan gambar ke RAM (Memory) dulu
             buffer = BytesIO()
             img.save(buffer, format="PNG")
+            buffer.seek(0)
             
-            # Buat nama file unik
-            file_name = f'qr-{self.validation_id}.png'
+            # --- HAPUS TRY/EXCEPT, BIARKAN CRASH JIKA ERROR ---
+            # Kita ingin melihat error aslinya!
             
-            # Simpan menggunakan ContentFile (Wajib untuk Cloudinary/S3)
-            self.qr_code.save(file_name, ContentFile(buffer.getvalue()), save=False)
+            print("Mencoba upload ke Cloudinary...") # Debug log
+            
+            response = cloudinary.uploader.upload(
+                buffer, 
+                folder="qrcodes", 
+                public_id=f"qr-{self.validation_id}",
+                overwrite=True, 
+                resource_type="image"
+            )
+            
+            print("Upload Sukses! ID:", response['public_id']) # Debug log
+            self.qr_code = response['public_id']
+            # --------------------------------------------------
 
         super().save(*args, **kwargs)
 

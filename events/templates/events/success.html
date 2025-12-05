@@ -16,11 +16,20 @@
             <h5 class="fw-bold mb-3">🎫 Tiket / QR Code Anda</h5>
             <div class="bg-light p-3 d-inline-block rounded border">
                 {% if participant.qr_code %}
-                    <img src="{{ participant.qr_code.url }}" alt="QR Code" width="200" height="200">
+                    
+                    <img src="https://res.cloudinary.com/dnqw0dqxz/image/upload/{{ participant.qr_code }}" 
+                        alt="QR Code" 
+                        width="200">
+
                     <br>
-                    <a href="{{ participant.qr_code.url }}" download="Tiket-Seminar.png" class="btn btn-sm btn-success mt-2">
+                    
+                    <a href="https://res.cloudinary.com/dnqw0dqxz/image/upload/{{ participant.qr_code }}" 
+                    download="Tiket-Seminar.png" 
+                    target="_blank"
+                    class="btn btn-sm btn-success mt-2">
                         ⬇ Simpan Gambar
                     </a>
+
                 {% else %}
                     <p>QR Code sedang digenerate...</p>
                 {% endif %}

@@ -6,6 +6,7 @@ import cloudinary  # <--- TAMBAHKAN INI
 import cloudinary.uploader # <--- TAMBAHKAN INI
 import cloudinary.api
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 1. Mengambil Data Rahasia dari .env
