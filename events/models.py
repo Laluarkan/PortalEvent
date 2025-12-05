@@ -6,6 +6,7 @@ import qrcode
 from io import BytesIO 
 from django.core.files import File 
 from django.conf import settings
+from cloudinary.models import CloudinaryField
 
 # 1. Custom User (Admin & Organizer)
 class User(AbstractUser):
@@ -33,7 +34,7 @@ class Event(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
-    poster = models.ImageField(upload_to='posters/', blank=True, null=True)
+    poster = CloudinaryField('image', folder='posters', blank=True, null=True)
     
     # Field Category (Wajib ada agar forms.py tidak error)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='seminar')

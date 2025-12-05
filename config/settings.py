@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from decouple import config # Untuk membaca .env
 import dj_database_url # Untuk database Render
+import cloudinary  # <--- TAMBAHKAN INI
+import cloudinary.uploader # <--- TAMBAHKAN INI
+import cloudinary.api
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
     'events',
     'django.contrib.sites', 
@@ -23,7 +27,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'cloudinary_storage', 
+     
     'cloudinary',
 ]
 
@@ -151,11 +155,18 @@ else:
     # PENTING: Set ke 0 agar browser melupakan HTTPS di local
     SECURE_HSTS_SECONDS = 0
 
+# --- KONFIGURASI CLOUDINARY (FROM ENV) ---
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': config('CLOUDINARY_API_KEY'),
     'API_SECRET': config('CLOUDINARY_API_SECRET'),
 }
 
-# Beritahu Django untuk menggunakan Cloudinary sebagai penyimpanan Media (Gambar Upload)
+# Inisialisasi Manual (Wajib agar tidak error "Must supply api_key")
+cloudinary.config( 
+    cloud_name = CLOUDINARY_STORAGE['CLOUD_NAME'], 
+    api_key = CLOUDINARY_STORAGE['API_KEY'], 
+    api_secret = CLOUDINARY_STORAGE['API_SECRET'] 
+)
+
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
