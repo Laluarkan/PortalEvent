@@ -12,6 +12,12 @@ from django.http import HttpResponse
 from django.db.models import Sum, Count
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, landscape
+import os
+import io
+from django.http import FileResponse # Gunakan FileResponse agar lebih aman
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.colors import HexColor
 
 def home(request):
     # Filter hanya yang status='active' agar yang pending tidak muncul di depan
@@ -310,47 +316,89 @@ def blast_email(request, event_id):
 
     return render(request, 'events/blast_email.html', {'form': form, 'event': event})
 
+@login_required
 def generate_certificate(request, validation_id):
+    # 1. Ambil Data Peserta
     participant = get_object_or_404(Participant, validation_id=validation_id)
 
+    # --- SECURITY CHECKS ---
+    # Cek 1: Apakah email login sama dengan email peserta?
     if participant.email != request.user.email:
-        return HttpResponse("Akses Ditolak: Email tidak cocok.", status=403)
+        return HttpResponse("Akses Ditolak: Email tidak cocok dengan akun login.", status=403)
 
     # Cek 2: Apakah Event SUDAH SELESAI?
     if participant.event.status != 'finished':
         return HttpResponse("Maaf, Sertifikat belum tersedia. Tunggu hingga acara diselesaikan oleh Organizer.", status=403)
     
-    # Hanya bisa download jika SUDAH VALID dan EVENT SELESAI (Opsional, disini kita buka aja)
+    # Cek 3: Apakah Peserta SUDAH VERIFIKASI (Lunas)?
     if not participant.is_verified:
-        return HttpResponse("Maaf, sertifikat hanya untuk peserta terverifikasi.", status=403)
+        return HttpResponse("Maaf, sertifikat hanya untuk peserta yang sudah terverifikasi (Lunas/Hadir).", status=403)
 
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="Sertifikat-{participant.full_name}.pdf"'
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=landscape(A4))
+    width, height = landscape(A4)
 
-    # Buat Canvas PDF
-    p = canvas.Canvas(response, pagesize=landscape(letter))
-    width, height = landscape(letter)
+    # --- PERBAIKAN PATH GAMBAR ---
+    # Kita cari path absolut (alamat lengkap di harddisk)
+    bg_filename = 'sertifikat_bg.png' # Pastikan nama file sama persis!
+    bg_path = os.path.join(settings.BASE_DIR, 'events',  'static', 'events', 'images', bg_filename)
 
-    # Desain Sederhana (Bisa diganti gambar background nanti)
-    p.setFont("Helvetica-Bold", 30)
-    p.drawCentredString(width/2, height - 150, "SERTIFIKAT PENGHARGAAN")
+    # DEBUGGING: Print lokasi file ke terminal agar kita tahu Django cari dimana
+    print(f"Mencari gambar di: {bg_path}") 
+
+    if os.path.exists(bg_path):
+        # Jika file ditemukan, gambar!
+        c.drawImage(bg_path, 0, 0, width=width, height=height)
+    else:
+        # Jika tidak ditemukan, Print ERROR BESAR di Terminal
+        print("!!! ERROR: GAMBAR BACKGROUND TIDAK DITEMUKAN !!!")
+        print("Pastikan file ada di folder 'static/images/' di dalam project root.")
+        # Kita pakai background polos warna abu sebagai tanda error
+        c.setFillColor(HexColor("#cccccc"))
+        c.rect(0, 0, width, height, fill=1)
+
+    c.setFont("Helvetica-Bold", 36)
+    c.setFillColor(HexColor("#1a1a1a")) # Hitam pekat
+    c.drawCentredString(width/2, height - 130, "SERTIFIKAT PENGHARGAAN")
+
+    # B. TEKS PENGANTAR
+    c.setFont("Helvetica", 14)
+    c.setFillColor(HexColor("#555555")) # Abu-abu
+    c.drawCentredString(width/2, height - 170, "No. ID: " + participant.get_certificate_id())
+    c.drawCentredString(width/2, height - 210, "Diberikan kepada:")
+
+    # C. NAMA PESERTA (Paling Besar)
+    c.setFont("Helvetica-Bold", 42)
+    c.setFillColor(HexColor("#000000")) # Hitam
+    # Trik: Ubah Y (height/2 + ...) untuk naik turun
+    c.drawCentredString(width/2, height/2 + 10, participant.full_name.upper())
+
+    # Garis bawah nama (opsional, biar keren)
+    c.setLineWidth(1)
+    c.line(width/2 - 150, height/2, width/2 + 150, height/2)
+
+    # D. DESKRIPSI KEGIATAN
+    c.setFont("Helvetica", 16)
+    c.setFillColor(HexColor("#333333"))
+    c.drawCentredString(width/2, height/2 - 40, "Atas partisipasinya sebagai Peserta dalam acara:")
+
+    # E. NAMA EVENT
+    c.setFont("Helvetica-Bold", 24)
+    c.setFillColor(HexColor("#1e3a8a")) # Biru Navy Professional
+    c.drawCentredString(width/2, height/2 - 80, participant.event.title)
+
+    # F. TANGGAL & LOKASI (Di bawah event)
+    tanggal_str = participant.event.date_time.strftime("%d %B %Y")
+    c.setFont("Helvetica", 12)
+    c.setFillColor(HexColor("#555555"))
+    c.drawCentredString(width/2, height/2 - 110, f"Dilaksanakan pada: {tanggal_str}")
     
-    p.setFont("Helvetica", 15)
-    p.drawCentredString(width/2, height - 200, "Diberikan kepada:")
-    
-    p.setFont("Helvetica-Bold", 25)
-    p.drawCentredString(width/2, height - 250, participant.full_name.upper())
-    
-    p.setFont("Helvetica", 15)
-    p.drawCentredString(width/2, height - 300, f"Atas partisipasinya dalam acara:")
-    p.drawCentredString(width/2, height - 330, participant.event.title)
-    
-    p.setFont("Helvetica-Oblique", 12)
-    p.drawCentredString(width/2, height - 450, f"ID Sertifikat: {participant.validation_id}")
-    
-    p.showPage()
-    p.save()
-    return response
+    # 4. Finalisasi
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    filename = f"Sertifikat-{participant.full_name}.pdf"
+    return FileResponse(buffer, as_attachment=True, filename=filename)
 
 @login_required
 def participant_dashboard(request):

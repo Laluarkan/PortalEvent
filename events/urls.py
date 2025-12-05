@@ -24,6 +24,7 @@ urlpatterns = [
     
     # FITUR PESERTA
     path('my-events/', views.participant_dashboard, name='participant_dashboard'),
+    path('download-sertifikat/<int:peserta_id>/', views.generate_certificate, name='cetak_sertifikat'),
     path('certificate/<uuid:validation_id>/', views.generate_certificate, name='generate_certificate'),
     path('dashboard/finish/<int:event_id>/', views.finish_event, name='finish_event'),
 ]

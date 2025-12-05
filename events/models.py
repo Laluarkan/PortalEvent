@@ -116,6 +116,21 @@ class Participant(models.Model):
 
     def __str__(self):
         return f"{self.full_name} - {self.event.title}"
+    
+    def get_certificate_id(self):
+        # Format: TAHUN-BULAN-TGL-NAMA-NOMORURUT
+        # Contoh: 2025-12-05-AWGDJASH-042
+        
+        # Ambil tanggal daftar
+        tgl = self.registered_at.strftime("%Y-%m-%d")
+        
+        # Bersihkan nama (hilangkan spasi jadi dash) dan uppercase
+        nama_safe = slugify(self.full_name).upper() 
+        
+        # Ambil ID database dan pad dengan nol (misal 1 jadi 001)
+        nomor_urut = str(self.id).zfill(3) 
+        
+        return f"{tgl}-{nama_safe}-{nomor_urut}"
         
 class Blacklist(models.Model):
     email = models.EmailField(unique=True)
