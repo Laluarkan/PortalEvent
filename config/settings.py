@@ -7,8 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 1. Mengambil Data Rahasia dari .env
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1').split(',')
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -59,10 +59,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # 2. Konfigurasi Database (Otomatis switch ke PostgreSQL di Render)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='postgresql://neondb_owner:npg_X4Vq7nJCDUzd@ep-old-cherry-a1mpspd6-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+        conn_max_age=600
+    )
 }
 
 # Jika ada variabel DATABASE_URL (di Render nanti), pakai PostgreSQL
