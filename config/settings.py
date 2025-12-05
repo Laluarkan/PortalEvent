@@ -59,16 +59,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # 2. Konfigurasi Database (Otomatis switch ke PostgreSQL di Render)
 DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://neondb_owner:npg_X4Vq7nJCDUzd@ep-old-cherry-a1mpspd6-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
-# Jika ada variabel DATABASE_URL (di Render nanti), pakai PostgreSQL
+# Cek apakah kita sedang di Render (ada DATABASE_URL)
+# Jika ada, baru kita timpa dengan PostgreSQL Neon
 DATABASE_URL = config('DATABASE_URL', default=None)
+
 if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL)
+    DATABASES['default'] = dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 
 AUTH_USER_MODEL = 'events.User'
 
@@ -123,3 +129,9 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True

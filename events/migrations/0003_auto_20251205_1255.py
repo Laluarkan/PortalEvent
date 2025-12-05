@@ -3,8 +3,8 @@ from django.conf import settings
 
 # --- KONFIGURASI DOMAIN ---
 # Hapus 'https://' dan slash di akhir '/'
-APP_DOMAIN = 'webkan-wmnm.onrender.com' 
-SITE_NAME = 'Web_Kan Seminar Portal'
+APP_DOMAIN = 'https://portalevent.onrender.com' 
+SITE_NAME = 'Seminar Portal'
 
 def update_site_domain(apps, schema_editor):
     """
